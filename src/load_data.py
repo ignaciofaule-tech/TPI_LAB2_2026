@@ -147,12 +147,14 @@ def crear_df_diario(archivos,output):
     ]
     target = ["target_Frio_kW_next"]
     df_diario = df_diario[features_a_utilizar + target].copy()
-    df_diario.to_csv(output)
+    df_diario.to_csv(output,index=False)
 
 parser = argparse.ArgumentParser(description="Junta archivos de datos, los limpia y los deja en un formato comodo.")
 
-parser.add_argument("--archivos",type=str,nargs='+',required=True,help='Nombre de los archivos separados por espacio')
-parser.add_argument("--output",type=str,default="dataset_consolidad.csv",help="Nombre del archivo Limpio")
+parser.add_argument("--archivos",type=str,nargs='+',
+                    default=["Totalizadores Planta - 2021_2023.xlsx", "Totalizadores Planta 2020_2022.xlsx", "Totalizadores Planta 2022_2023.xlsx"],
+                    help='Nombre de los archivos separados por espacio')
+parser.add_argument("--output",type=str,default="dataset_consolidado.csv",help="Nombre del nuevo archivo Limpio (.csv)")
 
 args = parser.parse_args()
 archivos = [os.path.join("data","raw",args.archivos[i]) for i in range(len(args.archivos))]
