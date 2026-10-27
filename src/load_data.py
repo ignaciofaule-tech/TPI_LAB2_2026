@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import argparse
 
 
 def procesar_archivo(filepath):
@@ -55,7 +56,7 @@ def procesar_archivo(filepath):
 
     return df_consolidado
 
-def crear_df_diario(archivos):
+def crear_df_diario(archivos,output):
     
     lista_dfs = []
     for archivo in archivos:
@@ -104,18 +105,56 @@ def crear_df_diario(archivos):
 
     #Features a utilizar (conocimiento del dominio)
 
-    features_a_utilizar = ['DIA', 'HORA', 'EE Planta / Hl', 'Agua Planta / Hl', 'ET Planta / Hl',
-       'Aire Planta / Hl', 'CO 2 / Hl', 'Hl de Mosto', 'Hl Producido Bodega',
-       'Hl Cerveza Filtrada', 'Hl Cerveza Envasada','Elaboracion (Kw)', 'Bodega (Kw)', 'Envasado (Kw)',
-       'Servicios (Kw)', 'Frio (Kw)', 'Agua Planta (Hl)', 'Agua Helada Cocina',
-       'Glicol Paste L3', 'Temp Tq Intermedio', 'Gas Planta (Mj)',
-       'Vapor Elaboracion (Kg)', 'Aire Producido (M3)',
-       'Aire Planta (M3)', 'Totalizador_Bodega', 'Totalizador_Tq_Pulmon',
-       'Tot Fermantacion_Cocina', 'Tot Reposo Inferior',
-       'Tot  Reposo Superior', 'Tot  Trasiego', 'Tot A10/20',
-       'Tot A40/240/50/60/Centec/Filtro', 'Tot  A130/330/430',
-       'Tot L3, L4 y Planta de CO2', 'target_Frio_kW_next']
+    features_a_utilizar = [
+        "DIA",
+        "KW Mycom 1",
+        "KW Mycom 2",
+        "KW Mycom 3",
+        "KW Mycom 4",
+        "KW Mycom 5",
+        "KW Mycom 6",
+        "KW Mycom 7",
+        "EE Frio / Hl",
+        "KW Bba Glicol Sala MAq",
+        "KW Bba Glicol Bod",
+        "KW Enfr Agua Cocina",
+        "Hl de Mosto",
+        "Hl Producido Bodega",
+        "Hl Cerveza Filtrada",
+        "Hl Cerveza Envasada",
+        "Hl Cerveza Cocina",
+        "Elaboracion (Kw)",
+        "Bodega (Kw)",
+        "Envasado (Kw)",
+        "Servicios (Kw)",
+        "Frio (Kw)",
+        "Agua Planta (Hl)",
+        "Agua Helada Cocina",
+        "Glicol Paste L3",
+        "Temp Tq Intermedio",
+        "Gas Planta (Mj)",
+        "Vapor Elaboracion (Kg)",
+        "Totalizador_Bodega",
+        "Totalizador_Tq_Pulmon",
+        "Tot Fermantacion_Cocina",
+        "Tot Reposo Inferior",
+        "Tot  Reposo Superior",
+        "Tot  Trasiego",
+        "Tot A10/20",
+        "Tot A40/240/50/60/Centec/Filtro",
+        "Tot  A130/330/430",
+        "Tot L3, L4 y Planta de CO2",
+    ]
+    target = ["target_Frio_kW_next"]
+    df_diario = df_diario[features_a_utilizar + target].copy()
+    df_diario.to_csv(output)
 
-    df_diario = df_diario[features_a_utilizar].copy()
-    
-    return df_diario
+parser = argparse.ArgumentParser(description="Junta archivos de datos, los limpia y los deja en un formato comodo.")
+
+parser.add_argument("--archivos",type=str,nargs='+',required=True,help='Nombre de los archivos separados por espacio')
+parser.add_argument("--output",type=str,default="dataset_consolidad.csv",help="Nombre del archivo Limpio")
+
+args = parser.parse_args()
+archivos = [os.path.join("data","raw",args.archivos[i]) for i in range(len(args.archivos))]
+output = os.path.join("data","clean",args.output)
+crear_df_diario(archivos,output)
