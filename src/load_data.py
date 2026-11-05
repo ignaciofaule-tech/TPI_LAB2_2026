@@ -54,6 +54,7 @@ def procesar_archivo(filepath):
             df_consolidado.drop(columns=cols_dup, inplace=True)
             df_consolidado = df_consolidado.copy()
 
+
     return df_consolidado
 
 def crear_df_diario(archivos,output):
@@ -85,6 +86,7 @@ def crear_df_diario(archivos,output):
 
         print(f"Dimensión de la base horaria final: {df_final.shape}")
 
+    df_final.to_csv(os.path.join("data","clean",output+"_complete.csv"))
 
     df_temp = df_final.groupby('DIA').last().reset_index()
     hora_cierre = pd.to_datetime('23:59:00').time()
@@ -147,16 +149,16 @@ def crear_df_diario(archivos,output):
     ]
     target = ["target_Frio_kW_next"]
     df_diario = df_diario[features_a_utilizar + target].copy()
-    df_diario.to_csv(output,index=False)
+    df_diario.to_csv(os.path.join("data","clean",output+".csv"),index=False)
 
 parser = argparse.ArgumentParser(description="Junta archivos de datos, los limpia y los deja en un formato comodo.")
 
 parser.add_argument("--archivos",type=str,nargs='+',
                     default=["Totalizadores Planta - 2021_2023.xlsx", "Totalizadores Planta 2020_2022.xlsx", "Totalizadores Planta 2022_2023.xlsx"],
                     help='Nombre de los archivos separados por espacio')
-parser.add_argument("--output",type=str,default="dataset_consolidado.csv",help="Nombre del nuevo archivo Limpio (.csv)")
+parser.add_argument("--output",type=str,default="dataset_consolidado",help="Nombre del nuevo archivo Limpio (no añadir .csv)")
 
 args = parser.parse_args()
 archivos = [os.path.join("data","raw",args.archivos[i]) for i in range(len(args.archivos))]
-output = os.path.join("data","clean",args.output)
+output = args.output
 crear_df_diario(archivos,output)
