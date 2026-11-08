@@ -13,18 +13,27 @@ def huella(ruta: Path, algoritmo: str = "sha256", bloque: int = 1 << 20) -> str:
     return h.hexdigest()
 
 
-parser = argparse.ArgumentParser(description="Se crea el checksum del dataset_consolidado.csv")
-parser.add_argument("--path",type=str,
-                    help='direccion del dataset')
+parser = argparse.ArgumentParser(description="Se crea/actualiza el checksum del dataset")
+parser.add_argument("--path", type=str, required=True, help='direccion del dataset')
 
 args = parser.parse_args()
-
 datos_path = Path(args.path)
+json_path = Path(r"data\checksum.json")
 
-checksum_data = {
-    datos_path.name : huella(datos_path),
-} 
+checksum_data = {}
+if json_path.exists():
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            checksum_data = json.load(f)
+    except json.JSONDecodeError:
+        checksum_data = {}
 
-with open(r"data\checksum.json", "w") as f:
-    json.dump(checksum_data, f)
+checksum_data[datos_path.name] = huella(datos_path)
+json_path.parent.mkdir(parents=True, exist_ok=True)
+
+with open(json_path, "w", encoding="utf-8") as f:
+    json.dump(checksum_data, f, indent=4)
+
+
+
 
