@@ -146,7 +146,26 @@ def crear_df_diario(archivos,output):
         "Tot A40/240/50/60/Centec/Filtro",
         "Tot  A130/330/430",
         "Tot L3, L4 y Planta de CO2",
+        # Variables agregadas tras realizar EDA
+        "Agua Cond REC",
+        "KW Gral Planta",
+        "KW Gral Planta",
+        "Planta (Kw)",
+        "Sala Maq (Kw)",
+        "KW Trafo 4",
+        "KW Trafo 5", 
+        'KW Trafo 8', 
+        'KW Trafo 11', 
+        'KW Trafo 12',
+        'KW Trafo 9', 
+        'KW Trafo 10',
+        "KW Cond 5. 6 y 9",
+        "Produccion (Hl)",
+        "Agua Cond REC",
+        "Aire Producido (M3)",
+        "Totalizador Sistema Kaeser"
     ]
+    
     target = ["target_Frio_kW_next"]
     df_diario = df_diario[features_a_utilizar + target].copy()
     df_diario.to_csv(os.path.join("data","clean",output+".csv"),index=False)
