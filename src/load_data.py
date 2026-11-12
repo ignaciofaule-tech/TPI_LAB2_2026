@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import os
 import argparse
-
+from create_checksum import create_checksum
+from pathlib import Path
 
 def procesar_archivo(filepath):
     xls = pd.ExcelFile(filepath)
@@ -57,7 +58,7 @@ def procesar_archivo(filepath):
 
     return df_consolidado
 
-def crear_df_final(archivos,output):
+def load_data(archivos):
     
     lista_dfs = []
     for archivo in archivos:
@@ -85,19 +86,25 @@ def crear_df_final(archivos,output):
         df_final.reset_index(drop=True, inplace=True)
 
         print(f"Dimensión de la base horaria final: {df_final.shape}")
+    return df_final
+    
 
-    df_final.to_csv(os.path.join("data","clean",output+"_complete.csv"))
 
 
 
 parser = argparse.ArgumentParser(description="Junta archivos de datos, los limpia y los deja en un formato comodo.")
 
 parser.add_argument("--archivos",type=str,nargs='+',
-                    default=["Totalizadores Planta - 2021_2023.xlsx", "Totalizadores Planta 2020_2022.xlsx", "Totalizadores Planta 2022_2023.xlsx"],
+                    default=["data/raw/Totalizadores Planta - 2021_2023.xlsx", "data/raw/Totalizadores Planta 2020_2022.xlsx", "data/raw/Totalizadores Planta 2022_2023.xlsx"],
                     help='Nombre de los archivos separados por espacio')
 parser.add_argument("--output",type=str,default="dataset_consolidado",help="Nombre del nuevo archivo Limpio (no añadir .csv)")
 
 args = parser.parse_args()
-archivos = [os.path.join("data","raw",args.archivos[i]) for i in range(len(args.archivos))]
+archivos = args.archivos
 output = args.output
-crear_df_final(archivos,output)
+df_final = load_data(archivos)
+
+path = os.path.join("data","clean",output+"_complete.csv")
+df_final.to_csv(path, index=False)
+
+create_checksum(json_path= Path(r"data\checksum.json"), datos_path=Path(path))
