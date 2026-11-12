@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import os
 import argparse
-
+from create_checksum import create_checksum
+from pathlib import Path
 
 def procesar_archivo(filepath):
     xls = pd.ExcelFile(filepath)
@@ -57,7 +58,7 @@ def procesar_archivo(filepath):
 
     return df_consolidado
 
-def crear_df_diario(archivos,output):
+def load_data(archivos):
     
     lista_dfs = []
     for archivo in archivos:
@@ -85,99 +86,25 @@ def crear_df_diario(archivos,output):
         df_final.reset_index(drop=True, inplace=True)
 
         print(f"Dimensión de la base horaria final: {df_final.shape}")
-
-    df_final.to_csv(os.path.join("data","clean",output+"_complete.csv"))
-
-    df_temp = df_final.groupby('DIA').last().reset_index()
-    hora_cierre = pd.to_datetime('23:59:00').time()
-    df_diario = df_temp[df_temp['HORA'] == hora_cierre].copy()
-
-
-    dias_eliminados = len(df_temp) - len(df_diario)
-    print(f"Se eliminaron {dias_eliminados} días incompletos que no llegaron a las 23:59.")
-
-    fecha_siguiente = df_diario["DIA"].shift(-1)
-    fecha_actual = df_diario["DIA"]
-    diferencia_dia_siguiente = fecha_siguiente - fecha_actual
-    indices_a_borrar = df_diario.index[diferencia_dia_siguiente > pd.Timedelta(days=1)]
-    df_diario = df_diario.drop(index=indices_a_borrar)
-    df_diario['target_Frio_kW_next'] = df_diario['Frio (Kw)'].shift(-1)
-
-    df_diario = df_diario.dropna(subset=['target_Frio_kW_next']).copy()
-
-    #Features a utilizar (conocimiento del dominio)
-
-    features_a_utilizar = [
-        "DIA",
-        "KW Mycom 1",
-        "KW Mycom 2",
-        "KW Mycom 3",
-        "KW Mycom 4",
-        "KW Mycom 5",
-        "KW Mycom 6",
-        "KW Mycom 7",
-        "EE Frio / Hl",
-        "KW Bba Glicol Sala MAq",
-        "KW Bba Glicol Bod",
-        "KW Enfr Agua Cocina",
-        "Hl de Mosto",
-        "Hl Producido Bodega",
-        "Hl Cerveza Filtrada",
-        "Hl Cerveza Envasada",
-        "Hl Cerveza Cocina",
-        "Elaboracion (Kw)",
-        "Bodega (Kw)",
-        "Envasado (Kw)",
-        "Servicios (Kw)",
-        "Frio (Kw)",
-        "Agua Planta (Hl)",
-        "Agua Helada Cocina",
-        "Glicol Paste L3",
-        "Temp Tq Intermedio",
-        "Gas Planta (Mj)",
-        "Vapor Elaboracion (Kg)",
-        "Totalizador_Bodega",
-        "Totalizador_Tq_Pulmon",
-        "Tot Fermantacion_Cocina",
-        "Tot Reposo Inferior",
-        "Tot  Reposo Superior",
-        "Tot  Trasiego",
-        "Tot A10/20",
-        "Tot A40/240/50/60/Centec/Filtro",
-        "Tot  A130/330/430",
-        "Tot L3, L4 y Planta de CO2",
-        # Variables agregadas tras realizar EDA
-        "Agua Cond REC",
-        "KW Gral Planta",
-        "KW Gral Planta",
-        "Planta (Kw)",
-        "Sala Maq (Kw)",
-        "KW Trafo 4",
-        "KW Trafo 5", 
-        'KW Trafo 8', 
-        'KW Trafo 11', 
-        'KW Trafo 12',
-        'KW Trafo 9', 
-        'KW Trafo 10',
-        "KW Cond 5. 6 y 9",
-        "Produccion (Hl)",
-        "Agua Cond REC",
-        "Aire Producido (M3)",
-        "Totalizador Sistema Kaeser"
-    ]
+    return df_final
     
-    target = ["target_Frio_kW_next"]
-    df_diario = df_diario[features_a_utilizar + target].copy()
-    df_diario.to_csv(os.path.join("data","clean",output+".csv"),index=False)
+
+
+
 
 parser = argparse.ArgumentParser(description="Junta archivos de datos, los limpia y los deja en un formato comodo.")
 
 parser.add_argument("--archivos",type=str,nargs='+',
-                    default=["Totalizadores Planta - 2021_2023.xlsx", "Totalizadores Planta 2020_2022.xlsx", "Totalizadores Planta 2022_2023.xlsx"],
+                    default=["data/raw/Totalizadores Planta - 2021_2023.xlsx", "data/raw/Totalizadores Planta 2020_2022.xlsx", "data/raw/Totalizadores Planta 2022_2023.xlsx"],
                     help='Nombre de los archivos separados por espacio')
 parser.add_argument("--output",type=str,default="dataset_consolidado",help="Nombre del nuevo archivo Limpio (no añadir .csv)")
 
 args = parser.parse_args()
-archivos = [os.path.join("data","raw",args.archivos[i]) for i in range(len(args.archivos))]
+archivos = args.archivos
 output = args.output
-crear_df_diario(archivos,output)
+df_final = load_data(archivos)
+
+path = os.path.join("data","clean",output+"_complete.csv")
+df_final.to_csv(path, index=False)
+
+create_checksum(json_path= Path(r"data\checksum.json"), datos_path=Path(path))
