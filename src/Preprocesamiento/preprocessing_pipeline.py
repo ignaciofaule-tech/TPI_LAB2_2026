@@ -1,12 +1,12 @@
-import numpy as np
+import pickle
 import pandas as pd
-import os
-import sklearn as sk
-from sklearn.impute import KNNImputer
-from sklearn.preprocessing import RobustScaler
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
-from feature_engine.outliers import Winsorizer
 
+def preprocessing_pipeline(X):
+    with open("src/Preprocesamiento/preprocesamiento.pkl", "rb") as f:
+        preprocesamiento = pickle.load(f)
+    return preprocesamiento.transform(X)
 
+df_final = pd.read_csv("data/processed/dataset_final.csv")
+
+preprocessed_data = preprocessing_pipeline(df_final.drop(columns=["target_Frio_kW_next"]))
+preprocessed_data.to_csv("data/processed/dataset_final_preprocessed.csv", index=False)

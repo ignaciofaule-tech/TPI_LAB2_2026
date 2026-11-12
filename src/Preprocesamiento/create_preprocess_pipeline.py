@@ -17,9 +17,6 @@ def create_preprocess_pipeline(datapath, semilla=42):
     target = 'target_Frio_kW_next'
     X_train, X_test, y_train, y_test = train_test_split(df.drop(columns=[target]), df[target], train_size=0.7, shuffle=False, random_state=semilla)
 
-    X_no_out_tr = X_train.copy()
-    columnas = X_no_out_tr.columns
-
 
     preprocesamiento = Pipeline(steps=[
         ("OutlierHandler", OutlierHandler(fold=3)),
@@ -28,7 +25,7 @@ def create_preprocess_pipeline(datapath, semilla=42):
         ("Imputacion", KNNImputer(n_neighbors=7)),
     ]).set_output(transform="pandas")
 
-    preprocesamiento.fit(X_no_out_tr)
+    preprocesamiento.fit(X_train)
 
     return preprocesamiento
 
