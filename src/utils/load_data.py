@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import argparse
-from create_checksum import create_checksum
+from utils.create_checksum import create_checksum
 from pathlib import Path
 
 def procesar_archivo(filepath):
