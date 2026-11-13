@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import argparse
 from pathlib import Path
-from utils.create_checksum import create_checksum
+from create_checksum import create_checksum
 
 def create_dataset_final(filepath):
 
@@ -89,7 +89,7 @@ def create_dataset_final(filepath):
 
     # Superan millon target
     idx_millones = df_diario[df_diario["target_Frio_kW_next"] > 500000].index
-    df_diario.drop(index=idx_millones)
+    df_diario = df_diario.drop(index=idx_millones)
 
     return df_diario
 
