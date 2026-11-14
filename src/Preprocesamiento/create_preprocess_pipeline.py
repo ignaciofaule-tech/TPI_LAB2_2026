@@ -30,16 +30,16 @@ def create_preprocess_pipeline(datapath, semilla=42):
     return preprocesamiento
 
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Crea y entrena el pipeline de preprocesamiento.")
 
-parser = argparse.ArgumentParser(description="Crea y entrena el pipeline de preprocesamiento.")
 
+    parser.add_argument("--archivo",type=str,
+                        default="data/processed/dataset_final.csv",
+                        help='Nombre del archivos utilizado para entrenar el pipeline de preprocesamiento')
 
-parser.add_argument("--archivo",type=str,
-                    default="data/processed/dataset_final.csv",
-                    help='Nombre del archivos utilizado para entrenar el pipeline de preprocesamiento')
+    args = parser.parse_args()
 
-args = parser.parse_args()
-
-preprocesamiento = create_preprocess_pipeline(args.archivo)
-with open("src/Preprocesamiento/preprocesamiento.pkl", "wb") as f:
-    pickle.dump(preprocesamiento, f)
+    preprocesamiento = create_preprocess_pipeline(args.archivo)
+    with open("src/Preprocesamiento/preprocesamiento.pkl", "wb") as f:
+        pickle.dump(preprocesamiento, f)

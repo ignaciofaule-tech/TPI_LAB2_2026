@@ -5,11 +5,12 @@ import argparse
 from pathlib import Path
 from utils.create_checksum import create_checksum
 
-def create_dataset_final(filepath):
-
-    datapath_completo = filepath
-    df_completo = pd.read_csv(datapath_completo)
-
+def create_dataset_final(filepath=None,df=None):
+    if filepath is not None:
+        datapath_completo = filepath
+        df_completo = pd.read_csv(datapath_completo)
+    elif df is not None:
+        df_completo = df
     df_completo = df_completo.replace(' ', np.nan)
     columnas_numericas = ~df_completo.columns.isin(["DIA", "HORA"])
     df_completo.loc[:, columnas_numericas] = (
@@ -61,7 +62,10 @@ def create_dataset_final(filepath):
 
     
     #Features a utilizar (conocimiento del dominio)
-
+    # Superan millon target
+    idx_millones = df_diario[df_diario["target_Frio_kW_next"] > 500000].index
+    df_diario.drop(index=idx_millones)
+    fechas = df_diario["DIA"].copy()
     features_a_utilizar = [
         "Kw Mycom Mean",
         'Frio (Kw)', 
@@ -87,30 +91,26 @@ def create_dataset_final(filepath):
     target = ["target_Frio_kW_next"]
     df_diario = df_diario[features_a_utilizar + target].copy()
 
-    # Superan millon target
-    idx_millones = df_diario[df_diario["target_Frio_kW_next"] > 500000].index
-    df_diario.drop(index=idx_millones)
-
-    return df_diario
+    return df_diario.copy(), fechas
 
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Crea el dataset final.")
 
-parser = argparse.ArgumentParser(description="Crea el dataset final.")
+    parser.add_argument("--archivo",type=str,
+                        default="data/clean/dataset_consolidado_complete.csv",
+                        help='Nombre del archivos utilizado para crear el df final')
 
-parser.add_argument("--archivo",type=str,
-                    default="data/clean/dataset_consolidado_complete.csv",
-                    help='Nombre del archivos utilizado para crear el df final')
-
-parser.add_argument("--output",type=str,default="dataset_final",help="Nombre del nuevo archivo Limpio (no añadir .csv)")
+    parser.add_argument("--output",type=str,default="dataset_final",help="Nombre del nuevo archivo Limpio (no añadir .csv)")
 
 
-args = parser.parse_args()
-archivo = args.archivo
-output = args.output
-df_final = create_dataset_final(archivo)
-path = os.path.join("data","processed",output+".csv")
+    args = parser.parse_args()
+    archivo = args.archivo
+    output = args.output
+    df_final,_ = create_dataset_final(archivo)
+    path = os.path.join("data","processed",output+".csv")
 
-df_final.to_csv(path, index=False)
+    df_final.to_csv(path, index=False)
 
-create_checksum(json_path= Path(r"data\checksum.json"), datos_path=Path(path))
+    create_checksum(json_path= Path(r"data\checksum.json"), datos_path=Path(path))
 

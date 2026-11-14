@@ -86,25 +86,25 @@ def load_data(archivos):
         df_final.reset_index(drop=True, inplace=True)
 
         print(f"Dimensión de la base horaria final: {df_final.shape}")
-    return df_final
+    return df_final.copy()
     
 
 
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Junta archivos de datos, los limpia y los deja en un formato comodo.")
 
-parser = argparse.ArgumentParser(description="Junta archivos de datos, los limpia y los deja en un formato comodo.")
+    parser.add_argument("--archivos",type=str,nargs='+',
+                        default=["data/raw/Totalizadores Planta - 2021_2023.xlsx", "data/raw/Totalizadores Planta 2020_2022.xlsx", "data/raw/Totalizadores Planta 2022_2023.xlsx"],
+                        help='Nombre de los archivos separados por espacio')
+    parser.add_argument("--output",type=str,default="dataset_consolidado",help="Nombre del nuevo archivo Limpio (no añadir .csv)")
 
-parser.add_argument("--archivos",type=str,nargs='+',
-                    default=["data/raw/Totalizadores Planta - 2021_2023.xlsx", "data/raw/Totalizadores Planta 2020_2022.xlsx", "data/raw/Totalizadores Planta 2022_2023.xlsx"],
-                    help='Nombre de los archivos separados por espacio')
-parser.add_argument("--output",type=str,default="dataset_consolidado",help="Nombre del nuevo archivo Limpio (no añadir .csv)")
+    args = parser.parse_args()
+    archivos = args.archivos
+    output = args.output
+    df_final = load_data(archivos)
 
-args = parser.parse_args()
-archivos = args.archivos
-output = args.output
-df_final = load_data(archivos)
+    path = os.path.join("data","clean",output+"_complete.csv")
+    df_final.to_csv(path, index=False)
 
-path = os.path.join("data","clean",output+"_complete.csv")
-df_final.to_csv(path, index=False)
-
-create_checksum(json_path= Path(r"data\checksum.json"), datos_path=Path(path))
+    create_checksum(json_path= Path(r"data\checksum.json"), datos_path=Path(path))
