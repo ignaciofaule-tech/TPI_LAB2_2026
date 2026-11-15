@@ -15,7 +15,6 @@ def load_model(version='latest'):
     registry_path = 'models/model_registry.json'
     if not os.path.exists(registry_path):
         raise FileNotFoundError(f"No se encontró el archivo {registry_path}")
-
     with open(registry_path, 'r') as f:
         registry = json.load(f)
     # Logica para encontrar la ultima/mejor version
@@ -24,10 +23,12 @@ def load_model(version='latest'):
     if version not in registry:
         raise KeyError(f"La versión {version} no existe en el registro")
     model_path = registry[version]['path']
+    preprocess_path = registry[version]['preprocess_path']
     model = joblib.load(model_path)
-    return model
+    print(f"Usando model_v{version}.pkl")
+    return model, preprocess_path
 
-def load_and_preprocess(filepath):
+def load_and_preprocess(filepath,preprocess_path):
     """Carga el archivo Excel y aplica todo el preprocesamiento.
     Reusa el pipeline de preprocessing_pipeline.py: no lo reimplementa.
     Devuelve la matriz de caracteristicas y las fechas correspondientes.
@@ -35,13 +36,13 @@ def load_and_preprocess(filepath):
     # ... aplicar pipeline de preprocesamiento ...
     df = load_data([filepath])
     df_final, fechas = create_dataset_final(df=df)
-    X_processed = preprocessing_pipeline(df_final.drop(columns=["target_Frio_kW_next"]))
+    X_processed = preprocessing_pipeline(df_final.drop(columns=["target_Frio_kW_next"]),preprocess_path)
     return X_processed, fechas
 
 def predict_consumption(filepath,version='latest'):
     """Funcion principal de prediccion."""
-    model = load_model(version) # carga desde el registry
-    X, fechas = load_and_preprocess(filepath)
+    model,preprocess_path = load_model(version) # carga desde el registry
+    X, fechas = load_and_preprocess(filepath,preprocess_path)
     predictions = model.predict(X)
     # La prediccion es DIARIA: una fila por dia, no por hora.
     # 'fecha' es el dia D; la prediccion corresponde al consumo del dia D+1.

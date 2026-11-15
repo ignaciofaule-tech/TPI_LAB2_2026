@@ -4,9 +4,10 @@ import sys
 sys.path.append("src/Preprocesamiento")
 from custom_transformers import OutlierHandler
 
-def preprocessing_pipeline(X):
-    with open("src/Preprocesamiento/preprocesamiento.pkl", "rb") as f:
+def preprocessing_pipeline(X,preprocess_path):
+    with open(preprocess_path, "rb") as f:
         preprocesamiento = pickle.load(f)
+    print("Preprocesando...")
     return preprocesamiento.transform(X)
 if __name__ == "__main__":
     df_final = pd.read_csv("data/processed/dataset_final.csv")
