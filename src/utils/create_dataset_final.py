@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import argparse
 from pathlib import Path
-from utils.create_checksum import create_checksum
+from create_checksum import create_checksum
 
 def create_dataset_final(filepath):
 
@@ -29,20 +29,21 @@ def create_dataset_final(filepath):
     #días donde el target no se reinicio a las 00:00 (Se obtuvieron del eda)
     dias_sin_reinicio = df_completo[(df_completo["HORA"] == "00:00:00") & (df_completo["Frio (Kw)"] != 0)]["DIA"]
     df_diario = df_diario.drop(index= df_diario[df_diario["DIA"].isin(dias_sin_reinicio)].index)
+    df_diario = df_diario[df_diario["Frio (Kw)"] <= 500000].copy()
+
 
     fecha_siguiente = pd.to_datetime(df_diario["DIA"].shift(-1))
     fecha_actual = pd.to_datetime(df_diario["DIA"])
     dias_consecutivos = (fecha_siguiente == fecha_actual + pd.Timedelta(days=1))
     df_diario["target_Frio_kW_next"] = (df_diario["Frio (Kw)"].shift(-1))
     df_diario.loc[~dias_consecutivos,"target_Frio_kW_next"] = np.nan
-    df_diario = df_diario.dropna(subset=["target_Frio_kW_next"]).copy()            
+    #df_diario = df_diario.dropna(subset=["target_Frio_kW_next"]).copy()            
 
     mycoms = df_diario.columns[df_diario.columns.str.contains("Mycom")]
     df_diario["Kw Mycom Mean"] = df_diario.loc[:, mycoms].mean(axis=1, skipna=True)
     df_diario = df_diario.drop(columns=mycoms, errors= "ignore")
 
     df_diario["DIA"] = pd.to_datetime(df_diario["DIA"])
-    
     df_diario["MES"] = df_diario["DIA"].dt.month
 
     fecha_pasada = pd.to_datetime(df_diario["DIA"].shift(7))
@@ -50,35 +51,57 @@ def create_dataset_final(filepath):
     diferencia_dia_pasado = fecha_actual - fecha_pasada
 
     df_diario['Frio lag last week'] = df_diario['Frio (Kw)'].shift(7)
-    indices_a_borrar = df_diario.index[diferencia_dia_pasado > pd.Timedelta(days=7)]
-    df_diario.loc[indices_a_borrar, 'Frio lag last week'] = None 
+    indices_a_borrar = df_diario.index[diferencia_dia_pasado != pd.Timedelta(days=7)]
+    df_diario.loc[indices_a_borrar, 'Frio lag last week'] = np.nan 
+
+
+
+    fecha_pasada = pd.to_datetime(df_diario["DIA"].shift(2))
+    fecha_actual = pd.to_datetime(df_diario["DIA"])
+    diferencia_dia_pasado = fecha_actual - fecha_pasada
+
+    #lag plazo corto
+    df_diario['Frio lag 2 days'] = df_diario['Frio (Kw)'].shift(2)
+    indices_a_borrar = df_diario.index[diferencia_dia_pasado != pd.Timedelta(days=2)]
+    df_diario.loc[indices_a_borrar, 'Frio lag 2 days'] = np.nan 
+
 
     df_diario["Prom movil Frio"] = df_diario["Frio (Kw)"].rolling(window=7).mean()
 
+    df_diario['sin_month_of_year'] = np.sin(2 * np.pi * (df_diario["MES"] ) / 12)
+    df_diario['cos_month_of_year'] = np.cos(2 * np.pi * (df_diario["MES"] ) / 12)
+
+    #poly y ratios
+    df_diario['Ratio_Frio_Planta'] = (df_diario['Frio (Kw)'] / (df_diario['KW Gral Planta'] + 1e-5))
+    df_diario["Ratio_Cond_Frio"] = df_diario["KW Cond 5. 6 y 9"] / (df_diario["Frio (Kw)"] + 1e-5)
     
-    df_diario['sin_month_of_year'] = np.sin(2 * np.pi * df_diario["MES"] / 12)
-    df_diario['cos_month_of_year'] = np.cos(2 * np.pi * df_diario["MES"] / 12)
+    df_diario = df_diario.dropna(subset=["target_Frio_kW_next"]).copy()
+
 
     
     #Features a utilizar (conocimiento del dominio)
 
+
+
     features_a_utilizar = [
-        "Kw Mycom Mean",
-        'Frio (Kw)', 
-        'cos_month_of_year',
         'Prom movil Frio',
-        'KW Gral Planta',
-        'KW Cond 5. 6 y 9',
-        'EE Frio / Hl',
-        'Temp Tq Intermedio',
-        'Frio lag last week',
-        'Sala Maq (Kw)',
-        'Hl Cerveza Filtrada',
+        'Frio (Kw)',
         'Servicios (Kw)',
-        'Tot  Trasiego',
+        'Sala Maq (Kw)',
+        'EE Frio / Hl',
+        'Bodega (Kw)',
+        'cos_month_of_year',
+        'sin_month_of_year',
+        'Frio lag last week',
+        'Kw Mycom Mean',
+        'KW Gral Planta',
         'Agua Cond REC',
-        'Vapor Elaboracion (Kg)',
-        'sin_month_of_year'
+        'Ratio_Frio_Planta',
+        'Hl Cerveza Filtrada',
+        'Envasado (Kw)',
+        'KW Cond 5. 6 y 9',
+        'Ratio_Cond_Frio',
+        'Frio lag 2 days'
     ]
 
     df_completo["HORA"] = df_completo["HORA"].astype(str)
@@ -86,10 +109,6 @@ def create_dataset_final(filepath):
 
     target = ["target_Frio_kW_next"]
     df_diario = df_diario[features_a_utilizar + target].copy()
-
-    # Superan millon target
-    idx_millones = df_diario[df_diario["target_Frio_kW_next"] > 500000].index
-    df_diario.drop(index=idx_millones)
 
     return df_diario
 
@@ -113,4 +132,5 @@ path = os.path.join("data","processed",output+".csv")
 df_final.to_csv(path, index=False)
 
 create_checksum(json_path= Path(r"data\checksum.json"), datos_path=Path(path))
+
 
