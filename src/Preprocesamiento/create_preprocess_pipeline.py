@@ -14,6 +14,7 @@ def create_preprocess_pipeline(datapath, semilla=42,only_train = True):
     df = pd.read_csv(datapath)
 
     target = 'target_Frio_kW_next'
+    df = df.dropna(subset=["target_Frio_kW_next"]).copy()
     if only_train:
         X_train, X_test, y_train, y_test = train_test_split(df.drop(columns=[target]), df[target], train_size=0.7, shuffle=False, random_state=semilla)
     else:
