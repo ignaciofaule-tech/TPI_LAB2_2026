@@ -3,7 +3,6 @@ import pandas as pd
 import os
 import argparse
 from pathlib import Path
-from create_checksum import create_checksum
 
 def create_dataset_final(filepath=None,df=None):
     if filepath is not None:
@@ -17,7 +16,7 @@ def create_dataset_final(filepath=None,df=None):
     df_completo.loc[:, columnas_numericas]
     .apply(pd.to_numeric, errors="coerce")
     )
-
+    df_completo["HORA"] = df_completo["HORA"].astype(str)
     df_completo = df_completo.sort_values(["DIA", "HORA"])
     df_temp = df_completo.groupby('DIA').tail(1).reset_index(drop=True)
     hora_cierre = '23:59:00'
@@ -75,15 +74,11 @@ def create_dataset_final(filepath=None,df=None):
     #poly y ratios
     df_diario['Ratio_Frio_Planta'] = (df_diario['Frio (Kw)'] / (df_diario['KW Gral Planta'] + 1e-5))
     df_diario["Ratio_Cond_Frio"] = df_diario["KW Cond 5. 6 y 9"] / (df_diario["Frio (Kw)"] + 1e-5)
-    
-    df_diario = df_diario.dropna(subset=["target_Frio_kW_next"]).copy()
 
 
     #poly y ratios
     df_diario['Ratio_Frio_Planta'] = (df_diario['Frio (Kw)'] / (df_diario['KW Gral Planta'] + 1e-5))
     df_diario["Ratio_Cond_Frio"] = df_diario["KW Cond 5. 6 y 9"] / (df_diario["Frio (Kw)"] + 1e-5)
-    
-    df_diario = df_diario.dropna(subset=["target_Frio_kW_next"]).copy()
 
 
     
@@ -124,6 +119,7 @@ def create_dataset_final(filepath=None,df=None):
 
 
 if __name__ == "__main__":
+    from create_checksum import create_checksum
     parser = argparse.ArgumentParser(description="Crea el dataset final.")
 
     parser.add_argument("--archivo",type=str,
