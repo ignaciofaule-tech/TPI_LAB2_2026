@@ -36,19 +36,21 @@ def load_and_preprocess(filepath,preprocess_path):
     # ... aplicar pipeline de preprocesamiento ...
     df = load_data([filepath])
     df_final, fechas = create_dataset_final(df=df)
+    target = df_final["target_Frio_kW_next"].values
     X_processed = preprocessing_pipeline(df_final.drop(columns=["target_Frio_kW_next"]),preprocess_path)
-    return X_processed, fechas
+    return X_processed, fechas, target
 
 def predict_consumption(filepath,version='latest'):
     """Funcion principal de prediccion."""
     model,preprocess_path = load_model(version) # carga desde el registry
-    X, fechas = load_and_preprocess(filepath,preprocess_path)
+    X, fechas, target = load_and_preprocess(filepath,preprocess_path)
     predictions = model.predict(X)
     # La prediccion es DIARIA: una fila por dia, no por hora.
     # 'fecha' es el dia D; la prediccion corresponde al consumo del dia D+1.
     return pd.DataFrame({
         'fecha': fechas,
-        'prediccion_frio_kw': predictions})
+        'prediccion_frio_kw': predictions,
+        'target': target})
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Realiza la predicción sobre un conjunto de datos")
