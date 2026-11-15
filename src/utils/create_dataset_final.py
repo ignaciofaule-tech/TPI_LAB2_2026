@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import argparse
 from pathlib import Path
-from utils.create_checksum import create_checksum
+from create_checksum import create_checksum
 
 def create_dataset_final(filepath=None,df=None):
     if filepath is not None:
@@ -69,8 +69,15 @@ def create_dataset_final(filepath=None,df=None):
 
     df_diario["Prom movil Frio"] = df_diario["Frio (Kw)"].rolling(window=7).mean()
 
-    df_diario['sin_month_of_year'] = np.sin(2 * np.pi * df_diario["MES"] / 12)
-    df_diario['cos_month_of_year'] = np.cos(2 * np.pi * df_diario["MES"] / 12)
+    df_diario['sin_month_of_year'] = np.sin(2 * np.pi * (df_diario["MES"] ) / 12)
+    df_diario['cos_month_of_year'] = np.cos(2 * np.pi * (df_diario["MES"] ) / 12)
+
+    #poly y ratios
+    df_diario['Ratio_Frio_Planta'] = (df_diario['Frio (Kw)'] / (df_diario['KW Gral Planta'] + 1e-5))
+    df_diario["Ratio_Cond_Frio"] = df_diario["KW Cond 5. 6 y 9"] / (df_diario["Frio (Kw)"] + 1e-5)
+    
+    df_diario = df_diario.dropna(subset=["target_Frio_kW_next"]).copy()
+
 
     #poly y ratios
     df_diario['Ratio_Frio_Planta'] = (df_diario['Frio (Kw)'] / (df_diario['KW Gral Planta'] + 1e-5))
@@ -85,6 +92,7 @@ def create_dataset_final(filepath=None,df=None):
 
     fechas = df_diario["DIA"].values
     
+
     features_a_utilizar = [
         'Prom movil Frio',
         'Frio (Kw)',
@@ -134,5 +142,6 @@ if __name__ == "__main__":
     df_final.to_csv(path, index=False)
 
     create_checksum(json_path= Path(r"data\checksum.json"), datos_path=Path(path))
+
 
 

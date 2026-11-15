@@ -1,5 +1,8 @@
 import pickle
 import pandas as pd
+import sys
+sys.path.append("src/Preprocesamiento")
+from custom_transformers import OutlierHandler
 
 def preprocessing_pipeline(X):
     with open("src/Preprocesamiento/preprocesamiento.pkl", "rb") as f:
