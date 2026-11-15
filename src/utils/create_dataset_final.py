@@ -68,8 +68,8 @@ def create_dataset_final(filepath):
 
     df_diario["Prom movil Frio"] = df_diario["Frio (Kw)"].rolling(window=7).mean()
 
-    df_diario['sin_month_of_year'] = np.sin(2 * np.pi * (df_diario["MES"] - 1) / 11)
-    df_diario['cos_month_of_year'] = np.cos(2 * np.pi * (df_diario["MES"] - 1) / 11)
+    df_diario['sin_month_of_year'] = np.sin(2 * np.pi * (df_diario["MES"] ) / 12)
+    df_diario['cos_month_of_year'] = np.cos(2 * np.pi * (df_diario["MES"] ) / 12)
 
     #poly y ratios
     df_diario['Ratio_Frio_Planta'] = (df_diario['Frio (Kw)'] / (df_diario['KW Gral Planta'] + 1e-5))
