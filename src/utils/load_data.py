@@ -6,15 +6,11 @@ from utils.create_checksum import create_checksum
 from pathlib import Path
 
 def procesar_archivo(filepath):
-    xls = pd.ExcelFile(filepath)
-    hojas_validas = [h for h in xls.sheet_names]
-
+    hojas_dict = pd.read_excel(filepath, sheet_name=None)
     df_consolidado = None
 
-    for hoja in hojas_validas:
-        df = pd.read_excel(filepath, sheet_name=hoja)
+    for hoja, df in hojas_dict.items():
         df.columns = df.columns.astype(str).str.strip()
-
         cols_no_deseadas = [c for c in df.columns if 'Unnamed' in c or c == '' or c.lower() == 'id']
         df.drop(columns=cols_no_deseadas, inplace=True, errors='ignore')
 

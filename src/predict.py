@@ -3,15 +3,17 @@ import joblib
 import sys
 import json
 import numpy as np
-from utils import load_data, create_dataset_final
-from Preprocesamiento import preprocessing_pipeline
+from utils.load_data import load_data
+from utils.create_dataset_final import create_dataset_final
+from Preprocesamiento.preprocessing_pipeline import preprocessing_pipeline
 import os
+import argparse
 def load_model(version='latest'):
     """Carga el modelo y los preprocesadores desde el registro.
     'latest' carga el modelo con la version mas alta.
     """
     registry_path = 'models/model_registry.json'
-    if not os.path.exist(registry_path):
+    if not os.path.exists(registry_path):
         raise FileNotFoundError(f"No se encontró el archivo {registry_path}")
 
     with open(registry_path, 'r') as f:
@@ -31,14 +33,14 @@ def load_and_preprocess(filepath):
     Devuelve la matriz de caracteristicas y las fechas correspondientes.
     """
     # ... aplicar pipeline de preprocesamiento ...
-    df = load_data(filepath)
+    df = load_data([filepath])
     df_final, fechas = create_dataset_final(df=df)
-    X_processed = preprocessing_pipeline(df_final)
+    X_processed = preprocessing_pipeline(df_final.drop(columns=["target_Frio_kW_next"]))
     return X_processed, fechas
 
-def predict_consumption(filepath):
+def predict_consumption(filepath,version='latest'):
     """Funcion principal de prediccion."""
-    model = load_model() # carga desde el registry
+    model = load_model(version) # carga desde el registry
     X, fechas = load_and_preprocess(filepath)
     predictions = model.predict(X)
     # La prediccion es DIARIA: una fila por dia, no por hora.
@@ -48,6 +50,12 @@ def predict_consumption(filepath):
         'prediccion_frio_kw': predictions})
 
 if __name__ == "__main__":
-    results = predict_consumption(sys.argv[1])
+    parser = argparse.ArgumentParser(description="Realiza la predicción sobre un conjunto de datos")
+    parser.add_argument("--archivo",type=str,help='Path del archivo xlsx')
+    parser.add_argument("--version",type=str,default='latest',help="Version del modelo")
+    
+    args = parser.parse_args()
+    
+    results = predict_consumption(args.archivo,args.version)
     results.to_csv('results/predicciones.csv', index=False)
     print("Predicciones generadas en results/predicciones.csv")

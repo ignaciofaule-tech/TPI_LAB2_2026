@@ -12,6 +12,7 @@ def train_model(path):
     model = GradientBoostingRegressor(**params,random_state=42,loss='absolute_error')
     
     df = pd.read_csv(path)
+    df = df.dropna(subset="target_Frio_kW_next")
     X = df.drop(columns=["target_Frio_kW_next"])
     y = df["target_Frio_kW_next"]
     X_preprocess = preprocessing_pipeline(X)
