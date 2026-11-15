@@ -15,7 +15,7 @@ del sistema de refrigeración Frio (kW) del día siguiente en una planta cervece
 
 
 ## Estructura del proyecto
-- `data/`: Datos limpios y procesados.
+- `data/`: Datos crudos, limpios y procesados.
 - `src/`: Código fuente para la creación del dataset, el preprocesamiento, modelado y predicción.
 - `notebooks/`: Notebooks jupyter de EDA, preprocesamiento y modelado.  
 - `results/`: Resultados de los experimentos realizados con disitntos modelos.
@@ -32,15 +32,17 @@ del sistema de refrigeración Frio (kW) del día siguiente en una planta cervece
 4) Verifica que estás posicionado en la carpeta principal del proyecto (`TPI_LAB2_2026`).
 5) Ejecuta el script del preprocesamiento (fundamental para una buena transformación de los datos) ingresando este comando y presionando Enter: 
 
-   `python src/create_preprocess_pipeline.py --archivo [path_del_archivo] --only_train True `
+   `python src/create_preprocess_pipeline.py --archivo [path_del_archivo] --train_size 0.85 --output [nombre_pipeline]`
+
+    train_size es el tamaño del train. En caso de valer 1, entrena con todo el dataset.
 
 6) Ejecuta el script de entrenamiento ingresando este comando y presionando Enter: 
 
-   `python src/train_model.py --archivo [path_del_archivo]`
+   `python src/train_model.py --archivo [path_del_archivo] --train_size 0.85 --preprocess_path [path_preprocess_pipeline]`
 
 **OPCIONAL:** el archivo de predict tiene adicionalmente un argento de versión de modelo. Si se desea utilizar una versión que no sea la predeterminada, **ejecute el paso 5** de la siguiente forma: 
 
-`python src/train_model.py --archivo [path_del_archivo] --version [version_deseada]` 
+`python src/train_model.py --archivo [path_del_archivo] --version [version_deseada] --train_size 0.85 --preprocess_path [path_preprocess_pipeline]` 
 
 
 ## Ejecución de la predicción
