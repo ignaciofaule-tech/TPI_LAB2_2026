@@ -4,7 +4,7 @@ import os
 import argparse
 from pathlib import Path
 
-def create_dataset_final(filepath=None,df=None):
+def create_dataset_final(filepath=None,df=None,train=True):
     if filepath is not None:
         datapath_completo = filepath
         df_completo = pd.read_csv(datapath_completo)
@@ -29,7 +29,8 @@ def create_dataset_final(filepath=None,df=None):
     #días donde el target no se reinicio a las 00:00 (Se obtuvieron del eda)
     dias_sin_reinicio = df_completo[(df_completo["HORA"] == "00:00:00") & (df_completo["Frio (Kw)"] != 0)]["DIA"]
     df_diario = df_diario.drop(index= df_diario[df_diario["DIA"].isin(dias_sin_reinicio)].index)
-    df_diario = df_diario[df_diario["Frio (Kw)"] <= 500000].copy()
+    if train:
+        df_diario = df_diario[df_diario["Frio (Kw)"] <= 500000].copy()
 
 
     fecha_siguiente = pd.to_datetime(df_diario["DIA"].shift(-1))

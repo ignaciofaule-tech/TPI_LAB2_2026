@@ -1,11 +1,10 @@
 import pandas as pd
 import joblib
-import sys
 import json
-import numpy as np
 from utils.load_data import load_data
 from utils.create_dataset_final import create_dataset_final
 from Preprocesamiento.preprocessing_pipeline import preprocessing_pipeline
+from sklearn.metrics import mean_absolute_error
 import os
 import argparse
 def load_model(version='latest'):
@@ -35,7 +34,7 @@ def load_and_preprocess(filepath,preprocess_path):
     """
     # ... aplicar pipeline de preprocesamiento ...
     df = load_data([filepath])
-    df_final, fechas = create_dataset_final(df=df)
+    df_final, fechas = create_dataset_final(df=df,train=False)
     target = df_final["target_Frio_kW_next"].values
     X_processed = preprocessing_pipeline(df_final.drop(columns=["target_Frio_kW_next"]),preprocess_path)
     return X_processed, fechas, target
@@ -62,3 +61,8 @@ if __name__ == "__main__":
     results = predict_consumption(args.archivo,args.version)
     results.to_csv('results/predicciones.csv', index=False)
     print("Predicciones generadas en results/predicciones.csv")
+    results = results.dropna(subset='target')
+    results = results[results["target"] <= 5e5].copy()
+    MAE = mean_absolute_error(results["prediccion_frio_kw"],results["target"])
+    print(10*"-"+ "Resultados" + 10*"-")
+    print("Se obtuvo un MAE de: ", MAE)
