@@ -1,0 +1,13 @@
+{
+    "Nombre": "dataset_final.csv",
+
+    "Fecha":  "15/11/2026",
+
+    "Script": "src/utils/create_dataset_final.py",
+
+    "Transformaciones": ["Feature Engineering", 
+                        "Eliminacion registros invalidos",
+                        "Adición del target"
+                        ]
+
+}
