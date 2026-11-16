@@ -9,7 +9,7 @@ from custom_transformers import OutlierHandler
 import argparse
 from sklearn.compose import ColumnTransformer
 
-def create_preprocess_pipeline(datapath,train_size = 0.85, semilla=42,):
+def create_preprocess_pipeline(datapath,train_size = 0.85, semilla=42):
 
     df = pd.read_csv(datapath)
 
